@@ -404,6 +404,34 @@ func testBuildCommand(t *testing.T, when spec.G, it spec.S) {
 					h.AssertNil(t, command.Execute())
 				})
 			})
+
+			when("an env file with comments is provided", func() {
+				var envPath string
+
+				it.Before(func() {
+					envfile, err := os.CreateTemp("", "envfile")
+					h.AssertNil(t, err)
+					defer envfile.Close()
+
+					envfile.WriteString("# this is a comment\nKEY=VALUE\n# another comment\n")
+					envPath = envfile.Name()
+				})
+
+				it.After(func() {
+					h.AssertNil(t, os.RemoveAll(envPath))
+				})
+
+				it("ignores comment lines and builds with remaining vars", func() {
+					mockClient.EXPECT().
+						Build(gomock.Any(), EqBuildOptionsWithEnv(map[string]string{
+							"KEY": "VALUE",
+						})).
+						Return(nil)
+
+					command.SetArgs([]string{"--builder", "my-builder", "image", "--env-file", envPath})
+					h.AssertNil(t, command.Execute())
+				})
+			})
 		})
 
 		when("a cache-image passed", func() {

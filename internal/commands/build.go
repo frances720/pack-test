@@ -389,7 +389,7 @@ func parseEnvFile(filename string) (map[string]string, error) {
 	}
 	for _, line := range strings.Split(string(f), "\n") {
 		line = strings.TrimSpace(line)
-		if line == "" {
+		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
 		out = addEnvVar(out, line)
